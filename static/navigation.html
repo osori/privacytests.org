@@ -7,18 +7,21 @@
   </head>
   <body>
     <iframe id="inner"/></iframe>
+    <script src="./runtime-config.js"></script>
     <script src="./post_data.js"></script>
     <script type="module">
      import { runAllTests } from "./test_utils.js"
      import { tests } from "./test_definitions.js";
 
+     const runtimeConfig = window.RUNTIME_CONFIG || {};
+     const testPagesRoot2 = runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
      const searchParams = new URLSearchParams(window.location.search);
      const thirdparty = searchParams.get("thirdparty");
      const mode = searchParams.get("mode");
      const iframe_root = (location.hostname === "localhost" ||
                           location.hostname === "127.0.0.1" ||
                           location.hostname === "")
-                       ? "" : "https://test-pages.privacytests2.org";
+                       ? "" : testPagesRoot2;
      const listener = async (event) => {
        if (!event.origin.includes("privacytests")) {
          return;

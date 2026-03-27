@@ -1,6 +1,9 @@
 // postResults(results) learns the sessionId for this page load,
-// and sends the results to results.privacytests.org/post under
+// and sends the results to RESULTS_ROOT/post under
 // that sessionId.
+
+const runtimeConfig = window.RUNTIME_CONFIG || {};
+const resultsRoot = runtimeConfig.RESULTS_ROOT || 'https://results.privacytests.org';
 
 
 const progressBar = (parent, fraction) => {
@@ -47,7 +50,7 @@ const postData = async (results, category) => {
     }
     console.log("posting", {sessionId, results});
     const isLocal = window.location.host.endsWith(".example");
-    const postURL = isLocal ? "https://results.pto2.example/post" : "https://results.privacytests.org/post";
+    const postURL = isLocal ? "https://results.pto2.example/post" : `${resultsRoot}/post`;
     const response = await fetch(postURL, {
       method: 'POST',
       headers: {
@@ -82,4 +85,3 @@ const postDataAndCarryOn = async (results, category) => {
     showError(e);
   }
 };
-

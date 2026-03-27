@@ -1,12 +1,16 @@
 const template = require('./template.js');
 const fs = require('fs');
 const path = require('node:path');
+const { getRuntimeConfig } = require('./runtime-config.js');
+
+const { TEST_PAGES_ROOT_2 } = getRuntimeConfig();
+
 const scriptHtml = `
 <script>
   function runTest() {
     const sessionId = Math.random().toString().substr(2);
-    window.open(\`https://test-pages.privacytests2.org/supercookies.html?mode=read&thirdparty=same&sessionId=\${sessionId}&me=true\`, "_blank", "noopener");
-    window.location.href = \`https://test-pages.privacytests2.org/supercookies.html?mode=write&thirdparty=same&sessionId=\${sessionId}&me=true\`;
+    window.open(\`${TEST_PAGES_ROOT_2}/supercookies.html?mode=read&thirdparty=same&sessionId=\${sessionId}&me=true\`, "_blank", "noopener");
+    window.location.href = \`${TEST_PAGES_ROOT_2}/supercookies.html?mode=write&thirdparty=same&sessionId=\${sessionId}&me=true\`;
   }
 </script>
 `;

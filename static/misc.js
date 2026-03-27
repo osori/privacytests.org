@@ -1,5 +1,8 @@
 // # Miscellaneous tests
 
+const runtimeConfig = window.RUNTIME_CONFIG || {};
+const testPagesRoot2 = runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
+
 const fetchJSON = async (...fetchArgs) => {
   let response = await fetch(...fetchArgs);
   return response.json();
@@ -14,7 +17,7 @@ const testTor = async () => {
   let wtfJSON = await fetchJSON("https://wtfismyip.com/json");
   const ipAddress = wtfJSON["YourFuckingIPAddress"];
   console.log(wtfJSON);
-  let torList = await fetchText('https://test-pages.privacytests2.org/live/torbulkexitlist');
+  let torList = await fetchText(`${testPagesRoot2}/live/torbulkexitlist`);
   let IsTorExit = torList.includes(ipAddress);
   return {
     "Tor enabled" : {
@@ -44,7 +47,7 @@ const testECH = async () => {
 const testGPC = async () => {
   // Ask the server what headers it sees.
   const description = "The Global Privacy Control is an HTTP header that can be sent by a browser to instruct a visited website not to sell the user's personal data to other parties. This test checks to see if the GPC header is sent to third-party elements on the web page.";
-  const requestHeaders = await fetchJSON("https://test-pages.privacytests2.org/live/headers");
+  const requestHeaders = await fetchJSON(`${testPagesRoot2}/live/headers`);
   const passed = requestHeaders["sec-gpc"] === "1";
   return { "GPC enabled third-party": { "sec-gpc": requestHeaders["sec-gpc"], passed, description }};
 };
