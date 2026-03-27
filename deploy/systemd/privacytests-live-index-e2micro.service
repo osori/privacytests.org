@@ -1,0 +1,21 @@
+[Unit]
+Description=PrivacyTests live aggregate process for GCE e2-micro (index.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<SERVICE_USER>
+Group=<SERVICE_GROUP>
+WorkingDirectory=<REPO_ROOT>
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=256
+ExecStart=/usr/bin/node live/index.js
+Restart=always
+RestartSec=5
+# Keep the service responsive on very small VMs.
+Nice=10
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

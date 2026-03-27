@@ -1,0 +1,18 @@
+[Unit]
+Description=PrivacyTests raw HTTPS/2 listener (8902)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<SERVICE_USER>
+Group=<SERVICE_GROUP>
+WorkingDirectory=<REPO_ROOT>
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node live/h2.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

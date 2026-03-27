@@ -1,0 +1,56 @@
+# Caddy v2 template for PrivacyTests live mirror.
+#
+# Usage:
+# 1) Replace all <PLACEHOLDER> values.
+# 2) Save as /etc/caddy/Caddyfile and reload Caddy.
+#
+# This template assumes:
+# - static files are in <REPO_ROOT>/static
+# - live/caching.js is on 127.0.0.1:3333
+# - live/params.js is on 127.0.0.1:3334
+# - live/results.js is on 127.0.0.1:3335 (HTTP) and 3336 (WS)
+# - raw TLS/h1/h2 test listeners run directly on 8900/8901/8902
+
+{
+  email <ACME_EMAIL>
+}
+
+<PRIMARY_DOMAIN>, <OPTIONAL_EXTRA_DOMAINS> {
+  encode zstd gzip
+
+  # Serve repository static assets at /. This is the test content root.
+  root * <REPO_ROOT>/static
+
+  # Health check for post-deploy CI.
+  # Expected: HTTP 200 + body: {"ok":true,"service":"results"}
+  handle /healthz {
+    reverse_proxy 127.0.0.1:3335
+  }
+
+  # Results endpoints must be routed to live/results.js.
+  @results path /post /step /me /results
+  handle @results {
+    reverse_proxy 127.0.0.1:3335
+  }
+
+  # Optional websocket endpoint for live session updates.
+  @ws path /ws
+  handle @ws {
+    reverse_proxy 127.0.0.1:3336
+  }
+
+  # Keep /live/ routed to the live app backend.
+  # Requests are rewritten to keep upstream paths unchanged.
+  handle_path /live/* {
+    reverse_proxy 127.0.0.1:3333
+  }
+
+  # Optional query-parameter test endpoint when exposed via same host.
+  handle /query {
+    reverse_proxy 127.0.0.1:3334
+  }
+
+  # Default: static file from /static; fallback to index.html.
+  try_files {path} /index.html
+  file_server
+}
