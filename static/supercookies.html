@@ -6,12 +6,16 @@
     <link id="favicon" rel="shortcut icon" type="image/png" href="" />
   </head>
   <body>
+    <script src="./runtime-config.js"></script>
     <script src="./post_data.js"></script>
     <script>
     const sleep = async (t) => new Promise(resolve => window.setTimeout(resolve, t));
      (async () => {
        try {
-      const iframe_root_same = "https://test-pages.privacytests2.org";
+      const runtimeConfig = window.RUNTIME_CONFIG || {};
+      const testPagesRoot2 = runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
+      const resultsRoot = runtimeConfig.RESULTS_ROOT || 'https://results.privacytests.org';
+      const iframe_root_same = testPagesRoot2;
       const param = (key) => new URLSearchParams(window.location.search).get(key);
       const mode = param("mode");
       const me = param("me");
@@ -19,7 +23,7 @@
       const sessionId = param("sessionId");
       console.log({mode, me, thirdparty, sessionId});
       let favicon = document.getElementById("favicon");
-      const baseURI = "https://test-pages.privacytests2.org/live";
+      const baseURI = `${testPagesRoot2}/live`;
       favicon.setAttribute("href", `${baseURI}/resource?type=favicon&key=${sessionId}`);
       const listener = async (event) => {
         if (!event.origin.includes("privacytests")) {
@@ -49,7 +53,7 @@
       addEventListener("message", listener);
       if (mode === "read" && me === "true" && thirdparty === "same") {
         while (true) {
-          let response = await fetch(`https://results.privacytests.org/step?sessionId=${sessionId}`, { cache: "no-store"});
+          let response = await fetch(`${resultsRoot}/step?sessionId=${sessionId}`, { cache: "no-store"});
           let {step} = await response.json();
           if (step > 0) {
             break;
@@ -63,7 +67,7 @@
       iframe_root = (location.hostname === "localhost" ||
                     location.hostname === "127.0.0.1" ||
                     location.hostname === "")
-                  ? "" : "https://test-pages.privacytests2.org/";
+                  ? "" : `${testPagesRoot2}/`;
       iframe.src = `${iframe_root}/supercookies_inner.html${window.location.search}`;
          iframe.allow = "geolocation camera microphone";
        } catch (e) {

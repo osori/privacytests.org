@@ -7,10 +7,13 @@
 </html>
 <body>
   done!
+  <script src="./runtime-config.js"></script>
   <script type="module">
+   const runtimeConfig = window.RUNTIME_CONFIG || {};
+   const resultsRoot = runtimeConfig.RESULTS_ROOT || 'https://results.privacytests.org';
    const urlParams = new URLSearchParams(window.location.search);
    const sessionId = urlParams.get("sessionId");
-   window.location.href = `https://results.privacytests.org/me?sessionId=${sessionId}`;
+   window.location.href = `${resultsRoot}/me?sessionId=${sessionId}`;
   </script>
 </body>
 </html>

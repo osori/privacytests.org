@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const cors = require('cors');
 const { contentPage } = require('../scripts/render.js');
+const { getRuntimeConfig } = require('../scripts/runtime-config.js');
 
 const app = express();
 const { WebSocketServer } = require('ws');
@@ -20,8 +21,13 @@ const sessionResults = new ExpiryMap(oneHourInMilliseconds);
 // The "same" domain is the one that is used for simluated third-party tracker
 // and one of the two first parties. The "different" domain is the other
 // first party we use.
-const first_party_root_same = 'https://test-pages.privacytests2.org';
-const first_party_root_different = 'https://test-pages.privacytests.org';
+const {
+  TEST_PAGES_ROOT_1,
+  TEST_PAGES_ROOT_2
+} = getRuntimeConfig();
+
+const first_party_root_same = TEST_PAGES_ROOT_2;
+const first_party_root_different = TEST_PAGES_ROOT_1;
 
 // Borrowed from https://github.com/brave/brave-core/blob/50df76971db6a6023b3db9aead0827606162dc9c/browser/net/brave_site_hacks_network_delegate_helper.cc#L29
 // and https://github.com/jparise/chrome-utm-stripper:

@@ -22,11 +22,18 @@ const { sleepMs, readYAMLFile } = require('./utils');
 const path = require('node:path');
 const { observeDomains, runDnsTests } = require('./dns-test.js');
 const systemNetworkSettings = require('./system-network-settings');
+const { getRuntimeConfig } = require('./runtime-config.js');
 
 // ## Constants
 
 const mitmProxyPort = 9090;
 const CLOUDFLARE_DNS = "1.1.1.1"
+const {
+  TEST_PAGES_ROOT_1,
+  TEST_PAGES_ROOT_2,
+  TEST_PAGES_ROOT_3,
+  RESULTS_ROOT
+} = getRuntimeConfig();
 
 // ## Utility functions
 
@@ -119,7 +126,7 @@ const connect = async (address, protocols, options) => {
 
 // Set up websocket.
 const createWebsocket = async () => {
-  const websocket = await connect('wss://results.privacytests.org/ws');
+  const websocket = await connect(`${RESULTS_ROOT.replace('https://', 'wss://')}/ws`);
   const firstMessage = await nextMessage(websocket);
   log('message received', (new Date()).toISOString());
   log(firstMessage);
@@ -160,12 +167,12 @@ const closeWebSocket = (websocket) => {
 // root for a domain that can be upgraded to https.
 // Finally we have a live root for additional tests that require non-static
 // responses.
-const kIframeRootSame = 'https://test-pages.privacytests2.org';
-const kIframeRootDifferent = 'https://test-pages.privacytests.org';
-const kIframeRootThird = 'https://test-pages.privacytests3.org';
+const kIframeRootSame = TEST_PAGES_ROOT_2;
+const kIframeRootDifferent = TEST_PAGES_ROOT_1;
+const kIframeRootThird = TEST_PAGES_ROOT_3;
 const kInsecureRoot = 'http://insecure.privacytests3.org';
 const kUpgradableRoot = 'http://upgradable.privacytests2.org';
-const kLiveRoot = 'https://test-pages.privacytests2.org/live';
+const kLiveRoot = `${TEST_PAGES_ROOT_2}/live`;
 const kHstsRoot = 'https://hsts.privacytests2.org';
 
 const ipAddressTest = async (results) => {

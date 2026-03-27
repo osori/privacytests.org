@@ -3,6 +3,9 @@ const app = express();
 const port = 3333;
 const path = require('node:path');
 const { Readable } = require( "stream" );
+const { getRuntimeConfig } = require('../scripts/runtime-config.js');
+
+const { TEST_PAGES_ROOT_2 } = getRuntimeConfig();
 
 const resourceFiles = {
   favicon: 'favicon.png',
@@ -208,7 +211,7 @@ app.get('/toplevel.html', (req, res) => {
   console.log({ gpcHeaderValue });
   res.setHeader('content-type', 'text/html');
   res.send(pageTemplate(`
-    <script src="https://test-pages.privacytests2.org/post_data.js"></script>
+    <script src="${TEST_PAGES_ROOT_2}/post_data.js"></script>
     <script>
       const results = {
         "IP address leak": {

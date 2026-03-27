@@ -10,7 +10,9 @@ const show = (msg) => {
   pre.innerHTML = msg;
 };
 
-const testURI = (path, type, key) => `https://test-pages.privacytests2.org/live/${path}?type=${type}&key=${key}`;
+const runtimeConfig = window.RUNTIME_CONFIG || {};
+const testPagesRoot2 = runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
+const testURI = (path, type, key) => `${testPagesRoot2}/live/${path}?type=${type}&key=${key}`;
 
 const itemsToTest = [
   'fetch cache',
@@ -61,4 +63,3 @@ try {
 console.log("hello from stream-isolation.js");
 
 })();
-
