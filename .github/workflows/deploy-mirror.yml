@@ -1,0 +1,97 @@
+name: Deploy mirror VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MIRROR_SSH_PORT: ${{ secrets.MIRROR_SSH_PORT != '' && secrets.MIRROR_SSH_PORT || '22' }}
+      MIRROR_DEPLOY_PATH: ${{ vars.MIRROR_DEPLOY_PATH != '' && vars.MIRROR_DEPLOY_PATH || '/srv/privacytests.org' }}
+      MIRROR_APP_URL: ${{ vars.MIRROR_APP_URL != '' && vars.MIRROR_APP_URL || 'http://127.0.0.1' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        env:
+          MIRROR_SSH_HOST: ${{ secrets.MIRROR_SSH_HOST }}
+          MIRROR_SSH_USER: ${{ secrets.MIRROR_SSH_USER }}
+          MIRROR_SSH_KEY: ${{ secrets.MIRROR_SSH_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for key in MIRROR_SSH_HOST MIRROR_SSH_USER MIRROR_SSH_KEY; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing required GitHub secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Troubleshooting: add required secrets in Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Configure SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.MIRROR_SSH_KEY }}" > ~/.ssh/id_mirror
+          chmod 600 ~/.ssh/id_mirror
+          ssh-keyscan -p "$MIRROR_SSH_PORT" -H "${{ secrets.MIRROR_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Sync project to mirror VPS (rsync)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" \
+            "mkdir -p '$MIRROR_DEPLOY_PATH'"
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            -e "ssh -i ~/.ssh/id_mirror -p $MIRROR_SSH_PORT" \
+            ./ "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}:$MIRROR_DEPLOY_PATH/"
+
+      - name: Run remote deploy script
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -tt -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" \
+            "cd '$MIRROR_DEPLOY_PATH' && \
+             chmod +x deploy/deploy.sh && \
+             APP_ROOT='$MIRROR_DEPLOY_PATH' ./deploy/deploy.sh"
+
+      - name: Run remote health checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          ts="$(date +%s)"
+          health_cmd="
+            set -euo pipefail
+            check() {
+              local url=\"$1\"
+              echo \"Checking: $url\"
+              if ! curl -fsS --max-time 20 \"$url\" >/dev/null; then
+                echo \"Health check failed: $url\"
+                return 1
+              fi
+            }
+            check \"$MIRROR_APP_URL/me.html\"
+            check \"$MIRROR_APP_URL/supercookies.html\"
+            check \"$MIRROR_APP_URL/live/resource?type=image&key=gha-$ts\"
+          "
+          if ! ssh -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" "$health_cmd"; then
+            echo "::error::Remote health checks failed."
+            echo "Troubleshooting hints:"
+            echo "- Verify deploy/restart commands in deploy/deploy.sh match services on the VPS."
+            echo "- Check reverse proxy mapping for /me.html, /supercookies.html, and /live/resource."
+            echo "- Review remote logs: 'journalctl -u <service> -n 200 --no-pager' and web server logs."
+            exit 1
+          fi
