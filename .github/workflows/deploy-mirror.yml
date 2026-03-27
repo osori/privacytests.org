@@ -73,20 +73,19 @@ jobs:
         run: |
           set -euo pipefail
           ts="$(date +%s)"
-          health_cmd="
-            set -euo pipefail
-            check() {
-              local url=\"$1\"
-              echo \"Checking: $url\"
-              if ! curl -fsS --max-time 20 \"$url\" >/dev/null; then
-                echo \"Health check failed: $url\"
-                return 1
-              fi
-            }
-            check \"$MIRROR_APP_URL/me.html\"
-            check \"$MIRROR_APP_URL/supercookies.html\"
-            check \"$MIRROR_APP_URL/live/resource?type=image&key=gha-$ts\"
-          "
+          printf -v health_cmd '%s\n' \
+            'set -euo pipefail' \
+            'check() {' \
+            '  local url="$1"' \
+            '  echo "Checking: $url"' \
+            '  if ! curl -fsS --max-time 20 "$url" >/dev/null; then' \
+            '    echo "Health check failed: $url"' \
+            '    return 1' \
+            '  fi' \
+            '}' \
+            "check \"$MIRROR_APP_URL/me.html\"" \
+            "check \"$MIRROR_APP_URL/supercookies.html\"" \
+            "check \"$MIRROR_APP_URL/live/resource?type=image&key=gha-$ts\""
           if ! ssh -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" "$health_cmd"; then
             echo "::error::Remote health checks failed."
             echo "Troubleshooting hints:"
