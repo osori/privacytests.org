@@ -213,6 +213,10 @@ app.use(cors());
 
 app.get('/', (req, res) => res.send('Hello World!'));
 
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ ok: true, service: 'results' });
+});
+
 app.get('/results', (req, res) => {
   const { raw, sessionId } = req.query;
   if (raw) {

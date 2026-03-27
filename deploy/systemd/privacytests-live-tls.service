@@ -1,0 +1,18 @@
+[Unit]
+Description=PrivacyTests raw TLS listener (8900)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<SERVICE_USER>
+Group=<SERVICE_GROUP>
+WorkingDirectory=<REPO_ROOT>
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node live/tls.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
