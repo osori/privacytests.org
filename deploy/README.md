@@ -5,6 +5,10 @@ This directory contains templates for running the PrivacyTests mirror with:
 - **Caddy** as reverse proxy (automatic TLS)
 - **systemd** units for persistent startup/restart
 
+Architecture overview:
+
+- [deploy/ARCHITECTURE.md](./ARCHITECTURE.md)
+
 ## Services and ports
 
 The live stack uses these listeners:
