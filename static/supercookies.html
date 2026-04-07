@@ -7,6 +7,7 @@
   </head>
   <body>
     <script src="./runtime-config.js"></script>
+    <script src="./runtime-helpers.js"></script>
     <script src="./post_data.js"></script>
     <script>
     const sleep = async (t) => new Promise(resolve => window.setTimeout(resolve, t));
@@ -26,7 +27,7 @@
       const baseURI = `${testPagesRoot2}/live`;
       favicon.setAttribute("href", `${baseURI}/resource?type=favicon&key=${sessionId}`);
       const listener = async (event) => {
-        if (!event.origin.includes("privacytests")) {
+        if (!window.RUNTIME_HELPERS.isAllowedOrigin(event.origin)) {
           return;
         }
         const data = JSON.parse(event.data);

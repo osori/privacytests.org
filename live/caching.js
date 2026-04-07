@@ -211,6 +211,7 @@ app.get('/toplevel.html', (req, res) => {
   console.log({ gpcHeaderValue });
   res.setHeader('content-type', 'text/html');
   res.send(pageTemplate(`
+    <script src="${TEST_PAGES_ROOT_2}/runtime-config.js"></script>
     <script src="${TEST_PAGES_ROOT_2}/post_data.js"></script>
     <script>
       const results = {

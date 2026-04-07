@@ -1,16 +1,13 @@
 const template = require('./template.js');
 const fs = require('fs');
 const path = require('node:path');
-const { getRuntimeConfig } = require('./runtime-config.js');
-
-const { TEST_PAGES_ROOT_2 } = getRuntimeConfig();
-
 const scriptHtml = `
+<script src="./runtime-config.js"></script>
+<script src="./runtime-helpers.js"></script>
 <script>
   function runTest() {
     const sessionId = Math.random().toString().substr(2);
-    window.open(\`${TEST_PAGES_ROOT_2}/supercookies.html?mode=read&thirdparty=same&sessionId=\${sessionId}&me=true\`, "_blank", "noopener");
-    window.location.href = \`${TEST_PAGES_ROOT_2}/supercookies.html?mode=write&thirdparty=same&sessionId=\${sessionId}&me=true\`;
+    window.RUNTIME_HELPERS.startMeFlow(sessionId);
   }
 </script>
 `;
@@ -23,8 +20,8 @@ const testButtonElement = `
 
 const contentHtml = scriptHtml + testButtonElement;
 
-const main = () => {
-  fs.writeFileSync(path.join(__dirname, '/../website/me.html'),
+const writePage = (destinationPath) => {
+  fs.writeFileSync(destinationPath,
     template.htmlPage({
       content: contentHtml,
       cssFiles: [
@@ -34,6 +31,11 @@ const main = () => {
       canonicalUrl: 'me.html',
       title: 'Test my browser'
     }));
+};
+
+const main = () => {
+  writePage(path.join(__dirname, '/../website/me.html'));
+  writePage(path.join(__dirname, '/../static/me.html'));
 };
 
 main();

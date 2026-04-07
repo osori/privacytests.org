@@ -13,7 +13,10 @@ jobs:
     env:
       MIRROR_SSH_PORT: ${{ secrets.MIRROR_SSH_PORT != '' && secrets.MIRROR_SSH_PORT || '22' }}
       MIRROR_DEPLOY_PATH: ${{ vars.MIRROR_DEPLOY_PATH != '' && vars.MIRROR_DEPLOY_PATH || '/srv/privacytests.org' }}
-      MIRROR_APP_URL: ${{ vars.MIRROR_APP_URL != '' && vars.MIRROR_APP_URL || 'http://127.0.0.1' }}
+      MIRROR_APP_URL: ${{ vars.MIRROR_APP_URL }}
+      MIRROR_DEPLOY_SERVICES: ${{ vars.MIRROR_DEPLOY_SERVICES != '' && vars.MIRROR_DEPLOY_SERVICES || 'privacytests-live-results.service privacytests-live-caching.service privacytests-live-params.service' }}
+      MIRROR_PROXY_SERVICE: ${{ vars.MIRROR_PROXY_SERVICE != '' && vars.MIRROR_PROXY_SERVICE || 'caddy' }}
+      MIRROR_HEALTHCHECK_URL: ${{ vars.MIRROR_HEALTHCHECK_URL != '' && vars.MIRROR_HEALTHCHECK_URL || 'http://127.0.0.1:3335/healthz' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -66,31 +69,37 @@ jobs:
           ssh -tt -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" \
             "cd '$MIRROR_DEPLOY_PATH' && \
              chmod +x deploy/deploy.sh && \
-             APP_ROOT='$MIRROR_DEPLOY_PATH' ./deploy/deploy.sh"
+             APP_ROOT='$MIRROR_DEPLOY_PATH' \
+             DEPLOY_SERVICES='$MIRROR_DEPLOY_SERVICES' \
+             PROXY_SERVICE='$MIRROR_PROXY_SERVICE' \
+             ./deploy/deploy.sh"
 
       - name: Run remote health checks
         shell: bash
         run: |
           set -euo pipefail
-          ts="$(date +%s)"
           printf -v health_cmd '%s\n' \
             'set -euo pipefail' \
-            'check() {' \
+            'check_json() {' \
             '  local url="$1"' \
             '  echo "Checking: $url"' \
-            '  if ! curl -fsS --max-time 20 "$url" >/dev/null; then' \
-            '    echo "Health check failed: $url"' \
+            '  local body' \
+            '  body="$(curl -fsS --max-time 20 "$url")"' \
+            '  if [[ "$body" != *'"'"'"ok":true'"'"'* ]] || [[ "$body" != *'"'"'"service":"results"'"'"'* ]]; then' \
+            '    echo "Health check returned unexpected body: $body"' \
             '    return 1' \
             '  fi' \
             '}' \
-            "check \"$MIRROR_APP_URL/me.html\"" \
-            "check \"$MIRROR_APP_URL/supercookies.html\"" \
-            "check \"$MIRROR_APP_URL/live/resource?type=image&key=gha-$ts\""
+            "check_json \"$MIRROR_HEALTHCHECK_URL\"" \
+            "optional_public_url='$MIRROR_APP_URL'" \
+            'if [ -n "$optional_public_url" ]; then' \
+            '  check_json "${optional_public_url%/}/healthz"' \
+            'fi'
           if ! ssh -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" "$health_cmd"; then
             echo "::error::Remote health checks failed."
             echo "Troubleshooting hints:"
             echo "- Verify deploy/restart commands in deploy/deploy.sh match services on the VPS."
-            echo "- Check reverse proxy mapping for /me.html, /supercookies.html, and /live/resource."
-            echo "- Review remote logs: 'journalctl -u <service> -n 200 --no-pager' and web server logs."
+            echo "- Check 'journalctl -u privacytests-live-results.service -n 200 --no-pager'."
+            echo "- If MIRROR_APP_URL is set, verify reverse proxy routing for /healthz."
             exit 1
           fi

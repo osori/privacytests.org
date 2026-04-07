@@ -1,5 +1,9 @@
 // # HTTPS tests
 
+const httpsRuntimeConfig = window.RUNTIME_CONFIG || {};
+const upgradableRoot = httpsRuntimeConfig.UPGRADABLE_ROOT || 'http://upgradable.privacytests2.org';
+const insecureRoot2 = httpsRuntimeConfig.INSECURE_ROOT_2 || 'http://insecure.privacytests2.org';
+
 const loadSubresource = async(tagName, url) => {
   const element = document.createElement(tagName);
   document.body.appendChild(element);
@@ -20,8 +24,8 @@ const loadSubresource = async(tagName, url) => {
 const insecureSubresourceTest = async (tag, fileName) => {
   let fileTypeNames = { "img": "image", "script": "script" };
   const description = `Checks to see if the browser attempts to upgrade an insecure address for an ${fileTypeNames[tag]} to HTTPS whenever possible.`;
-  let upgradableEvent = await loadSubresource(tag, `http://upgradable.privacytests2.org/content/${fileName}`);
-  let insecureEvent = await loadSubresource(tag, `http://insecure.privacytests2.org/content/${fileName}`);
+  let upgradableEvent = await loadSubresource(tag, `${upgradableRoot}/content/${fileName}`);
+  let insecureEvent = await loadSubresource(tag, `${insecureRoot2}/content/${fileName}`);
   let passed = insecureEvent.type === "error" || insecureEvent.type === "timeout";
   let putativeUpgradeHandling = upgradableEvent.type === "load" ? "upgraded" : "blocked";
   let result = passed ? putativeUpgradeHandling : "loaded insecurely";

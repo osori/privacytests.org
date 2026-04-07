@@ -32,7 +32,10 @@ const {
   TEST_PAGES_ROOT_1,
   TEST_PAGES_ROOT_2,
   TEST_PAGES_ROOT_3,
-  RESULTS_ROOT
+  RESULTS_ROOT,
+  UPGRADABLE_ROOT,
+  INSECURE_ROOT_3,
+  HSTS_ROOT
 } = getRuntimeConfig();
 
 // ## Utility functions
@@ -170,10 +173,10 @@ const closeWebSocket = (websocket) => {
 const kIframeRootSame = TEST_PAGES_ROOT_2;
 const kIframeRootDifferent = TEST_PAGES_ROOT_1;
 const kIframeRootThird = TEST_PAGES_ROOT_3;
-const kInsecureRoot = 'http://insecure.privacytests3.org';
-const kUpgradableRoot = 'http://upgradable.privacytests2.org';
+const kInsecureRoot = INSECURE_ROOT_3;
+const kUpgradableRoot = UPGRADABLE_ROOT;
 const kLiveRoot = `${TEST_PAGES_ROOT_2}/live`;
-const kHstsRoot = 'https://hsts.privacytests2.org';
+const kHstsRoot = HSTS_ROOT;
 
 const ipAddressTest = async (results) => {
   const myIpAddress = await fetchIpAddress();

@@ -179,6 +179,20 @@ What the script does:
 - restarts the raw TLS/H1/H2 helper services
 - runs smoke checks
 
+This fork did not use a separate apex entry host. For future deployments that
+need `/me.html` on apex while keeping the results backend on `results.<domain>`,
+set:
+
+```bash
+ENTRY_SITE_LABELS='example.com, www.example.com'
+```
+
+and keep:
+
+```bash
+RESULTS_ROOT=https://results.example.com
+```
+
 ### 3. Verify Services
 
 ```bash
@@ -208,6 +222,9 @@ curl -fsS https://tls.ij2.qzz.io:8900/
 curl -fsS https://altsvc.ij2.qzz.io:4433/protocol
 curl -fsSI https://h3.ij2.qzz.io:4434/connection_id
 ```
+
+If you provision with `ENTRY_SITE_LABELS`, check `/me.html` on that entry host
+instead of `results.ij.fyi`.
 
 Expected spot-check behavior for this fork:
 

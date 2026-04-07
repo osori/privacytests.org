@@ -23,11 +23,13 @@ const sessionResults = new ExpiryMap(oneHourInMilliseconds);
 // first party we use.
 const {
   TEST_PAGES_ROOT_1,
-  TEST_PAGES_ROOT_2
+  TEST_PAGES_ROOT_2,
+  UPGRADABLE_ROOT
 } = getRuntimeConfig();
 
 const first_party_root_same = TEST_PAGES_ROOT_2;
 const first_party_root_different = TEST_PAGES_ROOT_1;
+const upgradableHyperlinkUrl = new URL('/upgradable.html?source=hyperlink', UPGRADABLE_ROOT).toString();
 
 // Borrowed from https://github.com/brave/brave-core/blob/50df76971db6a6023b3db9aead0827606162dc9c/browser/net/brave_site_hacks_network_delegate_helper.cc#L29
 // and https://github.com/jparise/chrome-utm-stripper:
@@ -106,7 +108,7 @@ const pageSequence = [
   `${first_party_root_same}/misc.html`,
   queryParameterTestUrl(TRACKING_QUERY_PARAMETERS),
   `${first_party_root_same}/https.html`,
-  'http://upgradable.privacytests2.org/upgradable.html?source=hyperlink',
+  upgradableHyperlinkUrl,
   //  `http://insecure.privacytests2.org/insecure.html`,
   `${first_party_root_same}/done.html`
 ];
