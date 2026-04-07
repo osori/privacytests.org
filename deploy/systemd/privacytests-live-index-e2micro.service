@@ -9,6 +9,7 @@ User=<SERVICE_USER>
 Group=<SERVICE_GROUP>
 WorkingDirectory=<REPO_ROOT>
 Environment=NODE_ENV=production
+EnvironmentFile=-/etc/privacytests/privacytests.env
 Environment=NODE_OPTIONS=--max-old-space-size=256
 ExecStart=/usr/bin/node live/index.js
 Restart=always

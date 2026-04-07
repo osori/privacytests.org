@@ -8,6 +8,7 @@
   <body>
     <iframe id="inner"/></iframe>
     <script src="./runtime-config.js"></script>
+    <script src="./runtime-helpers.js"></script>
     <script src="./post_data.js"></script>
     <script type="module">
      import { runAllTests } from "./test_utils.js"
@@ -23,7 +24,7 @@
                           location.hostname === "")
                        ? "" : testPagesRoot2;
      const listener = async (event) => {
-       if (!event.origin.includes("privacytests")) {
+       if (!window.RUNTIME_HELPERS.isAllowedOrigin(event.origin)) {
          return;
        }
        const data = JSON.parse(event.data);

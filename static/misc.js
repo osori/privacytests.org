@@ -1,7 +1,7 @@
 // # Miscellaneous tests
 
-const runtimeConfig = window.RUNTIME_CONFIG || {};
-const testPagesRoot2 = runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
+const miscRuntimeConfig = window.RUNTIME_CONFIG || {};
+const testPagesRoot2 = miscRuntimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
 
 const fetchJSON = async (...fetchArgs) => {
   let response = await fetch(...fetchArgs);

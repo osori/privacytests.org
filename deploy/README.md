@@ -4,6 +4,14 @@ This directory contains templates for running the PrivacyTests mirror with:
 
 - **Caddy** as reverse proxy (automatic TLS)
 - **systemd** units for persistent startup/restart
+- **`deploy/provision-vm.sh`** to bootstrap a fresh Ubuntu VM
+
+For the full fresh-VM recipe used by the current mirror fork, including DNS,
+helper subdomains, GCE firewall rules, and a summary of the mirror-specific
+repo changes, see:
+
+- [deploy/MIRROR_BOOTSTRAP.md](/home/ilkyu/workspace/privacytests.org/deploy/MIRROR_BOOTSTRAP.md)
+- [docs/fork-delta.md](/home/ilkyu/workspace/privacytests.org/docs/fork-delta.md)
 
 ## Services and ports
 
@@ -20,6 +28,8 @@ The live stack uses these listeners:
 
 `deploy/caddy/Caddyfile.template` includes:
 
+- optional `ENTRY_SITE_LABELS` for a separate static `/me.html` entry host
+- `/runtime-config.js` generated from provisioned runtime roots
 - `/` static content from `static/`
 - `/live/*` → `live/caching.js` backend
 - `/post`, `/step`, `/me` (and `/results`) → `live/results.js`
@@ -67,13 +77,56 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now privacytests-live.target
 ```
 
+All service templates read runtime hostnames from:
+
+```bash
+/etc/privacytests/privacytests.env
+```
+
 ### Install Caddy template
 
 ```bash
 sudo cp deploy/caddy/Caddyfile.template /etc/caddy/Caddyfile
-# edit placeholders in /etc/caddy/Caddyfile
+# replace placeholders in /etc/caddy/Caddyfile
 sudo systemctl reload caddy
 ```
+
+### Bootstrap a fresh VM
+
+`deploy/provision-vm.sh` installs packages, renders systemd + Caddy config,
+writes `/etc/privacytests/privacytests.env`, starts the live services, and runs
+smoke checks.
+
+Local-only smoke setup on a fresh VM:
+
+```bash
+APP_ROOT=/srv/privacytests.org \
+SITE_LABELS=:80 \
+RESULTS_ROOT=http://127.0.0.1 \
+TEST_PAGES_ROOT_1=http://127.0.0.1 \
+TEST_PAGES_ROOT_2=http://127.0.0.1 \
+TEST_PAGES_ROOT_3=http://127.0.0.1 \
+./deploy/provision-vm.sh
+```
+
+For a real mirror, keep the same script and swap in your public hostnames:
+
+```bash
+APP_ROOT=/srv/privacytests.org \
+ENTRY_SITE_LABELS='example.com, www.example.com' \
+SITE_LABELS='results.example.com, test-pages.example.com, test-pages2.example.com' \
+ACME_EMAIL=you@example.com \
+RESULTS_ROOT=https://results.example.com \
+TEST_PAGES_ROOT_1=https://test-pages.example.com \
+TEST_PAGES_ROOT_2=https://test-pages2.example.com \
+TEST_PAGES_ROOT_3=https://test-pages2.example.com \
+./deploy/provision-vm.sh
+```
+
+If `ENTRY_SITE_LABELS` is omitted, `/me.html` stays on the main `SITE_LABELS`
+hosts. If it is set, the entry host serves static pages like `/me.html` and
+`/runtime-config.js`, while `/post`, `/step`, `/results`, and `/me` still live
+under `RESULTS_ROOT`.
 
 ## Notes for low-cost/free VPS usage
 

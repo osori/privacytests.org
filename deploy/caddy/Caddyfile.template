@@ -12,45 +12,240 @@
 # - raw TLS/h1/h2 test listeners run directly on 8900/8901/8902
 
 {
-  email <ACME_EMAIL>
+<CADDY_EMAIL_DIRECTIVE>
 }
 
-<PRIMARY_DOMAIN>, <OPTIONAL_EXTRA_DOMAINS> {
+(runtime_config) {
+  @runtime_config path /runtime-config.js
+  handle @runtime_config {
+    header Content-Type "application/javascript; charset=utf-8"
+    respond "window.RUNTIME_CONFIG = Object.freeze({ TEST_PAGES_ROOT_1: '<TEST_PAGES_ROOT_1>', TEST_PAGES_ROOT_2: '<TEST_PAGES_ROOT_2>', TEST_PAGES_ROOT_3: '<TEST_PAGES_ROOT_3>', RESULTS_ROOT: '<RESULTS_ROOT>', UPGRADABLE_ROOT: '<UPGRADABLE_ROOT>', INSECURE_ROOT_2: '<INSECURE_ROOT_2>', INSECURE_ROOT_3: '<INSECURE_ROOT_3>', HSTS_ROOT: '<HSTS_ROOT>', TLS_ROOT: '<TLS_ROOT>', H1_ROOT: '<H1_ROOT>', H2_ROOT: '<H2_ROOT>', H3_ROOT: '<H3_ROOT>', ALTSVC_ROOT_2: '<ALTSVC_ROOT_2>', ALTSVC_ROOT_3: '<ALTSVC_ROOT_3>' });"
+  }
+}
+
+(static_helper_host) {
   encode zstd gzip
 
-  # Serve repository static assets at /. This is the test content root.
   root * <REPO_ROOT>/static
-
-  # Health check for post-deploy CI.
-  # Expected: HTTP 200 + body: {"ok":true,"service":"results"}
-  handle /healthz {
-    reverse_proxy 127.0.0.1:3335
+  import runtime_config
+  handle_path /content/* {
+    root * <REPO_ROOT>/live
+    file_server
   }
-
-  # Results endpoints must be routed to live/results.js.
-  @results path /post /step /me /results
-  handle @results {
-    reverse_proxy 127.0.0.1:3335
-  }
-
-  # Optional websocket endpoint for live session updates.
-  @ws path /ws
-  handle @ws {
-    reverse_proxy 127.0.0.1:3336
-  }
-
-  # Keep /live/ routed to the live app backend.
-  # Requests are rewritten to keep upstream paths unchanged.
-  handle_path /live/* {
-    reverse_proxy 127.0.0.1:3333
-  }
-
-  # Optional query-parameter test endpoint when exposed via same host.
-  handle /query {
-    reverse_proxy 127.0.0.1:3334
-  }
-
-  # Default: static file from /static; fallback to index.html.
   try_files {path} /index.html
+  file_server
+}
+
+<ENTRYPOINT_SITE_BLOCK>
+
+<SITE_LABELS> {
+  encode zstd gzip
+  root * <REPO_ROOT>/static
+  route {
+    import runtime_config
+
+    # Health check for post-deploy CI.
+    # Expected: HTTP 200 + body: {"ok":true,"service":"results"}
+    @healthz path /healthz
+    handle @healthz {
+      reverse_proxy 127.0.0.1:3335
+    }
+
+    # Results endpoints must be routed to live/results.js.
+    @results path /post /step /me /results
+    handle @results {
+      reverse_proxy 127.0.0.1:3335
+    }
+
+    # Optional websocket endpoint for live session updates.
+    @ws path /ws
+    handle @ws {
+      reverse_proxy 127.0.0.1:3336
+    }
+
+    # Keep /live/ routed to the live app backend.
+    # Requests are rewritten to keep upstream paths unchanged.
+    handle_path /live/* {
+      reverse_proxy 127.0.0.1:3333
+    }
+
+    # Optional query-parameter test endpoint when exposed via same host.
+    @query path /query
+    handle @query {
+      reverse_proxy 127.0.0.1:3334
+    }
+
+    # Default: static file from /static; fallback to index.html.
+    try_files {path} /index.html
+    file_server
+  }
+}
+
+<UPGRADABLE_SITE_LABELS> {
+  import static_helper_host
+}
+
+<INSECURE_SITE_LABELS_2> {
+  import static_helper_host
+}
+
+<INSECURE_SITE_LABELS_3> {
+  import static_helper_host
+}
+
+<HSTS_SITE_LABELS> {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:3333
+}
+
+<TLS_CERT_SITE_LABEL> {
+  respond 204
+}
+
+<H1_CERT_SITE_LABEL> {
+  respond 204
+}
+
+<H2_CERT_SITE_LABEL> {
+  respond 204
+}
+
+<H3_SITE_LABEL> {
+  encode zstd gzip
+  root * <REPO_ROOT>/static/h2
+
+  @connection_id_h3 {
+    path /connection_id
+    protocol http/3
+  }
+  handle @connection_id_h3 {
+    header Alt-Svc "h3=\":4434\"; ma=86400, h3-32=\":4434\"; ma=86400, h3-29=\":4434\"; ma=86400"
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    header Content-Type "text/plain; charset=utf-8"
+    respond "{remote_port}"
+  }
+
+  @connection_id path /connection_id
+  handle @connection_id {
+    header Alt-Svc "h3=\":4434\"; ma=86400, h3-32=\":4434\"; ma=86400, h3-29=\":4434\"; ma=86400"
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    header Content-Type "text/plain; charset=utf-8"
+    respond ""
+  }
+
+  @protocol_h3_http3 {
+    path /protocol
+    protocol http/3
+  }
+  handle @protocol_h3_http3 {
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    header Content-Type "text/plain; charset=utf-8"
+    respond "h3"
+  }
+
+  @protocol_h3 path /protocol
+  handle @protocol_h3 {
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
+  file_server
+}
+
+<ALTSVC_SITE_LABEL_2> {
+  encode zstd gzip
+  root * <REPO_ROOT>/static/h2
+
+  @set path /set
+  handle @set {
+    header Alt-Svc "h3=\":4433\"; ma=86400, h3-32=\":4433\"; ma=86400, h3-29=\":4433\"; ma=86400"
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
+  @protocol path /protocol
+  @protocol_http3 {
+    path /protocol
+    protocol http/3
+  }
+  handle @protocol_http3 {
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    header Content-Type "text/plain; charset=utf-8"
+    respond "h3"
+  }
+
+  handle @protocol {
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
+  @clear path /clear
+  handle @clear {
+    header Alt-Svc "clear"
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
+  file_server
+}
+
+<ALTSVC_SITE_LABEL_3> {
+  encode zstd gzip
+  root * <REPO_ROOT>/static/h2
+
+  @set3 path /set
+  handle @set3 {
+    header Alt-Svc "h3=\":4435\"; ma=86400, h3-32=\":4435\"; ma=86400, h3-29=\":4435\"; ma=86400"
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
+  @protocol3 path /protocol
+  @protocol3_http3 {
+    path /protocol
+    protocol http/3
+  }
+  handle @protocol3_http3 {
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    header Content-Type "text/plain; charset=utf-8"
+    respond "h3"
+  }
+
+  handle @protocol3 {
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
+  @clear3 path /clear
+  handle @clear3 {
+    header Alt-Svc "clear"
+    header Strict-Transport-Security "max-age=31536000"
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "no-store"
+    file_server
+  }
+
   file_server
 }

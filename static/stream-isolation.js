@@ -10,8 +10,10 @@ const show = (msg) => {
   pre.innerHTML = msg;
 };
 
-const runtimeConfig = window.RUNTIME_CONFIG || {};
-const testPagesRoot2 = runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
+const streamIsolationRuntimeConfig = window.RUNTIME_CONFIG || {};
+const testPagesRoot2 = streamIsolationRuntimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org';
+const h1Root = streamIsolationRuntimeConfig.H1_ROOT || 'https://h1.privacytests2.org:8901';
+const h2Root = streamIsolationRuntimeConfig.H2_ROOT || 'https://h2.privacytests2.org:8902';
 const testURI = (path, type, key) => `${testPagesRoot2}/live/${path}?type=${type}&key=${key}`;
 
 const itemsToTest = [
@@ -47,9 +49,9 @@ try {
   await sleepMs(10000);
   const results = await fetch(uri);
   const jsonResults = await results.json();
-  const h1 = await (await fetch("https://h1.privacytests2.org:8901/?mode=ip")).text()
+  const h1 = await (await fetch(`${h1Root}/?mode=ip`)).text()
   jsonResults["h1"] = h1;
-  const h2 = await (await fetch("https://h2.privacytests2.org:8902/?mode=ip")).text()
+  const h2 = await (await fetch(`${h2Root}/?mode=ip`)).text()
   jsonResults["h2"] = h2;
   show(JSON.stringify(jsonResults, null, " "));
   console.log(jsonResults);

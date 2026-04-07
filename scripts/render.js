@@ -325,7 +325,7 @@ const resultsToTable = (results, title, subtitle, desktopOnly, testMyBrowser) =>
   if (bestResults.length === 0) {
     return [];
   }
-  const sections = readYAMLFile('../assets/copy/sections.yaml');
+  const sections = readYAMLFile(path.join(__dirname, '../assets/copy/sections.yaml'));
   for (const { category, name, description, tagline, tooltipType } of sections) {
     if (!(!desktopOnly && ['tracker_cookies', 'dns'].includes(category)) &&
         !(testMyBrowser && ['session_1p', 'session_3p', 'dns', 'tracker_cookies'].includes(category))) {

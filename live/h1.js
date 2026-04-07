@@ -1,11 +1,10 @@
 const https = require('https');
 const url = require("url");
-const fs = require('fs');
+const { getRuntimeConfig } = require('../scripts/runtime-config.js');
+const { readTlsOptionsForOrigin } = require('./certificates.js');
 
-const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/h1.privacytests2.org/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/h1.privacytests2.org/fullchain.pem')
-};
+const { H1_ROOT } = getRuntimeConfig();
+const options = readTlsOptionsForOrigin(H1_ROOT);
 
 let socketTags = new Map();
 

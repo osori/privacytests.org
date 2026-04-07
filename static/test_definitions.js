@@ -4,9 +4,16 @@ export let tests = (async () => {
 const IdbKeyVal = await import('https://cdn.jsdelivr.net/npm/idb-keyval@3/dist/idb-keyval.mjs');
 
 const baseURI = document.location.origin + "/live/";
+const runtimeConfig = window.RUNTIME_CONFIG || {};
+const testPagesRoot3 = runtimeConfig.TEST_PAGES_ROOT_3 || 'https://test-pages.privacytests3.org';
+const altSvcRoot2 = runtimeConfig.ALTSVC_ROOT_2 || 'https://altsvc.privacytests2.org:4433';
+const altSvcRoot3 = runtimeConfig.ALTSVC_ROOT_3 || 'https://altsvc.privacytests3.org:4435';
+const tlsRoot = runtimeConfig.TLS_ROOT || 'https://tls.privacytests2.org:8900';
+const h1Root = runtimeConfig.H1_ROOT || 'https://h1.privacytests2.org:8901';
+const h2Root = runtimeConfig.H2_ROOT || 'https://h2.privacytests2.org:8902';
+const h3Root = runtimeConfig.H3_ROOT || 'https://h3.privacytests2.org:4434';
 
-const altSvcOrigin = document.location.origin.includes("privacytests3.org") ?
-      "https://altsvc.privacytests3.org:4435" : "https://altsvc.privacytests2.org:4433";
+const altSvcOrigin = document.location.origin === testPagesRoot3 ? altSvcRoot3 : altSvcRoot2;
 
 let testURI = (path, type, key) => `${baseURI}${path}?type=${type}&key=${key}`;
 
@@ -328,11 +335,11 @@ return {
     category: "supercookies",
     description: "The TLS protocol is used by HTTPS to make connections secure. If the browser were to re-use a TLS session, then the session ID could be used to track users across websites.",
     write: async () => {
-      let results = await fetch("https://tls.privacytests2.org:8900/");
+      let results = await fetch(`${tlsRoot}/`);
       return (await results.json()).sessionId;
     },
     read: async () => {
-      let results = await fetch("https://tls.privacytests2.org:8900/");
+      let results = await fetch(`${tlsRoot}/`);
       return (await results.json()).sessionId;
     }
   },
@@ -349,10 +356,10 @@ return {
     category: "supercookies",
     description: "HTTP/1.x are the classic web connection protocols. If these connections are re-used across websites, they can be used to track users.",
     write: async (secret) => {
-      await fetch(`https://h1.privacytests2.org:8901/?mode=write&secret=${secret}`, {cache: "no-store"});
+      await fetch(`${h1Root}/?mode=write&secret=${secret}`, {cache: "no-store"});
     },
     read: async () => {
-      let response = await fetch(`https://h1.privacytests2.org:8901/?mode=read`, {cache: "no-store"});
+      let response = await fetch(`${h1Root}/?mode=read`, {cache: "no-store"});
       return await response.text();
     }
   },
@@ -360,10 +367,10 @@ return {
     category: "supercookies",
     description: "HTTP/2 is a web connection protocol introduced in 2015. Some browsers re-use HTTP/2 connections across websites and can thus be used to track users.",
     write: async (secret) => {
-      await fetch(`https://h2.privacytests2.org:8902/?mode=write&secret=${secret}`, {cache: "no-store"});
+      await fetch(`${h2Root}/?mode=write&secret=${secret}`, {cache: "no-store"});
     },
     read: async () => {
-      let response = await fetch(`https://h2.privacytests2.org:8902/?mode=read`, {cache: "no-store"});
+      let response = await fetch(`${h2Root}/?mode=read`, {cache: "no-store"});
       return await response.text();
     }
   },
@@ -373,11 +380,11 @@ return {
     write: async (secret) => {
       // Ensure that we can switch over to h3 via alt-svc:
       for (let i = 0; i<3; ++i) {
-        await fetch(`https://h3.privacytests2.org:4434/connection_id`, {cache: "no-store"});
+        await fetch(`${h3Root}/connection_id`, {cache: "no-store"});
         await sleepMs(500);
       }
       // Are we now connecting over h3?
-      let response = await fetch(`https://h3.privacytests2.org:4434/connection_id`, {cache: "no-store"});
+      let response = await fetch(`${h3Root}/connection_id`, {cache: "no-store"});
       let text = await response.text();
       // Empty response text indicates we are not connecting over h3:
       if (text.trim() === "") {
@@ -385,7 +392,7 @@ return {
       }
     },
     read: async () => {
-      let response = await fetch(`https://h3.privacytests2.org:4434/connection_id`);
+      let response = await fetch(`${h3Root}/connection_id`);
       return await response.text();
     }
   },
@@ -685,4 +692,3 @@ return {
 };
 
 });
-

@@ -9,6 +9,7 @@ User=<SERVICE_USER>
 Group=<SERVICE_GROUP>
 WorkingDirectory=<REPO_ROOT>
 Environment=NODE_ENV=production
+EnvironmentFile=-/etc/privacytests/privacytests.env
 ExecStart=/usr/bin/node live/caching.js
 Restart=always
 RestartSec=3

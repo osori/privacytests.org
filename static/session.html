@@ -6,11 +6,14 @@
     <link id="favicon" rel="shortcut icon" type="image/png" href="" />
   </head>
   <body>
+    <script src="./runtime-config.js"></script>
+    <script src="./runtime-helpers.js"></script>
     <script src="./post_data.js"></script>
     <script>
     const sleep = async (t) => new Promise(resolve => window.setTimeout(resolve, t));
      (async () => {
        try {
+         const runtimeConfig = window.RUNTIME_CONFIG || {};
          const param = (key) => new URLSearchParams(window.location.search).get(key);
          const mode = param("mode");
          const sessionId = param("sessionId");
@@ -18,10 +21,12 @@
          const label = param("label");
          console.log({mode, sessionId, firstParty});
          const favicon = document.getElementById("favicon");
-         const baseURI = `https://test-pages.privacytests${firstParty === "true" ? "3" : "2"}.org`;
+         const baseURI = firstParty === "true"
+           ? (runtimeConfig.TEST_PAGES_ROOT_3 || 'https://test-pages.privacytests3.org')
+           : (runtimeConfig.TEST_PAGES_ROOT_2 || 'https://test-pages.privacytests2.org');
          favicon.setAttribute("href", `${baseURI}/live/resource?type=favicon&key=${sessionId}_${label}`);
          const listener = async (event) => {
-           if (!event.origin.includes("privacytests")) {
+           if (!window.RUNTIME_HELPERS.isAllowedOrigin(event.origin)) {
              return;
            }
            const data = JSON.parse(event.data);

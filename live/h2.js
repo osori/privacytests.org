@@ -1,11 +1,10 @@
 const http2 = require('http2');
 const url = require("url");
-const fs = require('fs');
+const { getRuntimeConfig } = require('../scripts/runtime-config.js');
+const { readTlsOptionsForOrigin } = require('./certificates.js');
 
-const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/h2.privacytests2.org/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/h2.privacytests2.org/fullchain.pem')
-};
+const { H2_ROOT } = getRuntimeConfig();
+const options = readTlsOptionsForOrigin(H2_ROOT);
 
 // Create a secure HTTP/2 server
 const server = http2.createSecureServer(options);

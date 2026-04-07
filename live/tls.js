@@ -1,5 +1,6 @@
 const https = require('https');
-const fs = require('fs');
+const { getRuntimeConfig } = require('../scripts/runtime-config.js');
+const { readTlsOptionsForOrigin } = require('./certificates.js');
 
 const START_SESSION_ID = 16;
 const START_MASTER_KEY = 50;
@@ -9,10 +10,8 @@ const parseSession = (buf) => ({
   masterKey: buf.slice(START_MASTER_KEY, START_MASTER_KEY + 48).toString('hex')
 });
 
-const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/tls.privacytests2.org/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/tls.privacytests2.org/fullchain.pem')
-};
+const { TLS_ROOT } = getRuntimeConfig();
+const options = readTlsOptionsForOrigin(TLS_ROOT);
 
 const theServer = https.createServer(options, function (req, res) {
   const result = {
