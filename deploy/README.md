@@ -11,6 +11,7 @@ helper subdomains, GCE firewall rules, and a summary of the mirror-specific
 repo changes, see:
 
 - [deploy/MIRROR_BOOTSTRAP.md](/home/ilkyu/workspace/privacytests.org/deploy/MIRROR_BOOTSTRAP.md)
+- [docs/fork-delta.md](/home/ilkyu/workspace/privacytests.org/docs/fork-delta.md)
 
 ## Services and ports
 

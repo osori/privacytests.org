@@ -7,6 +7,11 @@ fresh VM.
 It exists so future forks do not need to reconstruct the setup from chat logs
 or rediscover which helper hosts, ports, and runtime roots are required.
 
+For the maintained list of fork-only deltas that should be preserved during
+future upstream syncs, see:
+
+- [docs/fork-delta.md](/home/ilkyu/workspace/privacytests.org/docs/fork-delta.md)
+
 ## Scope
 
 The goal of this fork was:
