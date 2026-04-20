@@ -18,6 +18,7 @@ jobs:
       MIRROR_PROXY_SERVICE: ${{ vars.MIRROR_PROXY_SERVICE != '' && vars.MIRROR_PROXY_SERVICE || 'caddy' }}
       MIRROR_HEALTHCHECK_URL: ${{ vars.MIRROR_HEALTHCHECK_URL != '' && vars.MIRROR_HEALTHCHECK_URL || 'http://127.0.0.1:3335/healthz' }}
       MIRROR_NODE_PACKAGE_DIRS: ${{ vars.MIRROR_NODE_PACKAGE_DIRS != '' && vars.MIRROR_NODE_PACKAGE_DIRS || 'live' }}
+      MIRROR_ROOT_NODE_PACKAGES: ${{ vars.MIRROR_ROOT_NODE_PACKAGES != '' && vars.MIRROR_ROOT_NODE_PACKAGES || 'file-url@^2.0.2 open@^7.3.0 minimist@^1.2.5 lodash@^4.17.21 clean-html@^2.0.1 yaml@^1.10.2 datauri@^4.1.0 html-validate@^8.18.1' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -70,7 +71,12 @@ jobs:
         run: |
           set -euo pipefail
           ssh -tt -i ~/.ssh/id_mirror -p "$MIRROR_SSH_PORT" "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}" \
-            "cd '$MIRROR_DEPLOY_PATH' && \
+            "set -euo pipefail && \
+             cd '$MIRROR_DEPLOY_PATH' && \
+             root_node_packages='$MIRROR_ROOT_NODE_PACKAGES' && \
+             if [ -n \"\$root_node_packages\" ]; then \
+               npm install --no-audit --no-fund --no-save \$root_node_packages; \
+             fi && \
              chmod +x deploy/deploy.sh && \
              APP_ROOT='$MIRROR_DEPLOY_PATH' \
              DEPLOY_SERVICES='$MIRROR_DEPLOY_SERVICES' \
@@ -86,13 +92,16 @@ jobs:
             'set -euo pipefail' \
             'check_json() {' \
             '  local url="$1"' \
-            '  echo "Checking: $url"' \
-            '  local body' \
-            '  body="$(curl -fsS --max-time 20 "$url")"' \
-            '  if [[ "$body" != *'"'"'"ok":true'"'"'* ]] || [[ "$body" != *'"'"'"service":"results"'"'"'* ]]; then' \
-            '    echo "Health check returned unexpected body: $body"' \
-            '    return 1' \
-            '  fi' \
+            '  local attempt body=""' \
+            '  for attempt in $(seq 1 12); do' \
+            '    echo "Checking ($attempt/12): $url"' \
+            '    if body="$(curl -fsS --max-time 20 "$url")" && [[ "$body" == *'"'"'"ok":true'"'"'* ]] && [[ "$body" == *'"'"'"service":"results"'"'"'* ]]; then' \
+            '      return 0' \
+            '    fi' \
+            '    sleep 5' \
+            '  done' \
+            '  echo "Health check returned unexpected body: ${body:-<empty>}"' \
+            '  return 1' \
             '}' \
             "check_json \"$MIRROR_HEALTHCHECK_URL\"" \
             "optional_public_url='$MIRROR_APP_URL'" \
