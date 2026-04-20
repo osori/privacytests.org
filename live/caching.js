@@ -275,8 +275,10 @@ app.get('/client_hints.html', (req, res) => {
 });
 
 app.get('/torbulkexitlist', async (req, res) => {
-  const fetchResponse = await fetch('https://check.torproject.org/torbulkexitlist');
-  Readable.fromWeb(fetchResponse.body).pipe(res);
+  // Fork-only: disable torproject.org lookups without deleting the upstream code.
+  // const fetchResponse = await fetch('https://check.torproject.org/torbulkexitlist');
+  // Readable.fromWeb(fetchResponse.body).pipe(res);
+  res.status(204).end();
 });
 
 app.listen(port, () => console.log(`listening for file requests on ${port}`));

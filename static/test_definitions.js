@@ -35,17 +35,18 @@ const { ipAddress, usingTor } = await (async () => {
   }
   const wtfJSON = await response.json();
   const ipAddress = wtfJSON["YourFuckingIPAddress"];
-  let onionooResponse;
-  for (let i = 0; i < 10; ++i) {
-    try {
-      onionooResponse = await fetch(`https://onionoo.torproject.org/details?limit=1&search=${ipAddress}`);
-      break;
-    } catch (e) {
-      console.log(e);
-    }
-  }
-  const onionooJSON = await onionooResponse.json();
-  const usingTor = onionooJSON.relays.length > 0;
+  // Fork-only: disable torproject.org lookups without deleting the upstream code.
+  // let onionooResponse;
+  // for (let i = 0; i < 10; ++i) {
+  //   try {
+  //     onionooResponse = await fetch(`https://onionoo.torproject.org/details?limit=1&search=${ipAddress}`);
+  //     break;
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // }
+  // const onionooJSON = await onionooResponse.json();
+  const usingTor = false;
   return { ipAddress, usingTor };
 })();
 
