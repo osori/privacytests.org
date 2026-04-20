@@ -95,7 +95,10 @@
 
 <HSTS_SITE_LABELS> {
   encode zstd gzip
-  reverse_proxy 127.0.0.1:3333
+  route {
+    import runtime_config
+    reverse_proxy 127.0.0.1:3333
+  }
 }
 
 <TLS_CERT_SITE_LABEL> {
