@@ -150,13 +150,15 @@ app.get('/clear_hsts.png', (req, res) => {
 app.get('/set_hsts2_file.html', (req, res) => {
   const headers = {
     'Strict-Transport-Security': 'max-age=30',
-    'Cache-Control': 'max-age=0'
+    'Cache-Control': 'max-age=0',
+    'Access-Control-Allow-Origin': '*'
   };
   res.sendFile('page.html', { root: __dirname, headers });
 });
 
 app.get('/test_hsts2_file.html', (req, res) => {
   const headers = { 'Cache-Control': 'max-age=0',
+                    'Access-Control-Allow-Origin': '*',
                     'Content-Type': 'text/html'};
   res.sendFile('page.html', { root: __dirname, headers });
 });
@@ -164,7 +166,8 @@ app.get('/test_hsts2_file.html', (req, res) => {
 app.get('/clear_hsts2_file.html', (req, res) => {
   const headers = {
     'Strict-Transport-Security': 'max-age=0',
-    'Cache-Control': 'max-age=0'
+    'Cache-Control': 'max-age=0',
+    'Access-Control-Allow-Origin': '*'
   };
   res.sendFile('page.html', { root: __dirname, headers });
 });

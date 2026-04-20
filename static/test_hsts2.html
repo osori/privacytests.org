@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>test hsts2</title>
+    <meta charset="utf8">
+    <link rel="stylesheet" href="test.css">
+  </head>
+  <body>
+    <!-- Fork-only: restore the missing HSTS(fetch) wrapper expected by browser automation. -->
+    <script src="./runtime-config.js"></script>
+    <script src="./post_data.js"></script>
+    <script src="./hsts2.js"></script>
+    <script>
+     (async () => {
+       const results = await test_hsts2();
+       await postData(results, "hsts2");
+     })();
+    </script>
+  </body>
+</html>
