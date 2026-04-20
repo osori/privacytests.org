@@ -19,7 +19,6 @@
   @runtime_config path /runtime-config.js
   handle @runtime_config {
     header Content-Type "application/javascript; charset=utf-8"
-    header Cache-Control "no-store, max-age=0"
     respond "window.RUNTIME_CONFIG = Object.freeze({ TEST_PAGES_ROOT_1: '<TEST_PAGES_ROOT_1>', TEST_PAGES_ROOT_2: '<TEST_PAGES_ROOT_2>', TEST_PAGES_ROOT_3: '<TEST_PAGES_ROOT_3>', RESULTS_ROOT: '<RESULTS_ROOT>', UPGRADABLE_ROOT: '<UPGRADABLE_ROOT>', INSECURE_ROOT_2: '<INSECURE_ROOT_2>', INSECURE_ROOT_3: '<INSECURE_ROOT_3>', HSTS_ROOT: '<HSTS_ROOT>', TLS_ROOT: '<TLS_ROOT>', H1_ROOT: '<H1_ROOT>', H2_ROOT: '<H2_ROOT>', H3_ROOT: '<H3_ROOT>', ALTSVC_ROOT_2: '<ALTSVC_ROOT_2>', ALTSVC_ROOT_3: '<ALTSVC_ROOT_3>' });"
   }
 }
