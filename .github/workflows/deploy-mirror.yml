@@ -61,6 +61,7 @@ jobs:
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='node_modules/' \
+            --exclude='website/' \
             -e "ssh -i ~/.ssh/id_mirror -p $MIRROR_SSH_PORT" \
             ./ "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}:$MIRROR_DEPLOY_PATH/"
 
