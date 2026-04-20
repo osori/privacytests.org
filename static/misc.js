@@ -17,12 +17,14 @@ const testTor = async () => {
   let wtfJSON = await fetchJSON("https://wtfismyip.com/json");
   const ipAddress = wtfJSON["YourFuckingIPAddress"];
   console.log(wtfJSON);
-  let torList = await fetchText(`${testPagesRoot2}/live/torbulkexitlist`);
-  let IsTorExit = torList.includes(ipAddress);
+  // Fork-only: disable torproject.org lookups without deleting the upstream code.
+  // let torList = await fetchText(`${testPagesRoot2}/live/torbulkexitlist`);
+  // let IsTorExit = torList.includes(ipAddress);
+  void ipAddress;
   return {
     "Tor enabled" : {
-      IsTorExit,
-      passed: IsTorExit,
+      unsupported: true,
+      passed: false,
       description: "The Tor network sends the browser's web requests through a series of relays to hide a user's IP address, thereby helping to mask their identity and location. This test checks to see if the Tor network is being used by default."
     }
   };
