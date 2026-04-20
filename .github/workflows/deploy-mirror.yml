@@ -17,6 +17,7 @@ jobs:
       MIRROR_DEPLOY_SERVICES: ${{ vars.MIRROR_DEPLOY_SERVICES != '' && vars.MIRROR_DEPLOY_SERVICES || 'privacytests-live-results.service privacytests-live-caching.service privacytests-live-params.service' }}
       MIRROR_PROXY_SERVICE: ${{ vars.MIRROR_PROXY_SERVICE != '' && vars.MIRROR_PROXY_SERVICE || 'caddy' }}
       MIRROR_HEALTHCHECK_URL: ${{ vars.MIRROR_HEALTHCHECK_URL != '' && vars.MIRROR_HEALTHCHECK_URL || 'http://127.0.0.1:3335/healthz' }}
+      MIRROR_NODE_PACKAGE_DIRS: ${{ vars.MIRROR_NODE_PACKAGE_DIRS != '' && vars.MIRROR_NODE_PACKAGE_DIRS || 'live' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -59,6 +60,7 @@ jobs:
           rsync -az --delete \
             --exclude='.git/' \
             --exclude='.github/' \
+            --exclude='node_modules/' \
             -e "ssh -i ~/.ssh/id_mirror -p $MIRROR_SSH_PORT" \
             ./ "${{ secrets.MIRROR_SSH_USER }}@${{ secrets.MIRROR_SSH_HOST }}:$MIRROR_DEPLOY_PATH/"
 
@@ -71,6 +73,7 @@ jobs:
              chmod +x deploy/deploy.sh && \
              APP_ROOT='$MIRROR_DEPLOY_PATH' \
              DEPLOY_SERVICES='$MIRROR_DEPLOY_SERVICES' \
+             NODE_PACKAGE_DIRS='$MIRROR_NODE_PACKAGE_DIRS' \
              PROXY_SERVICE='$MIRROR_PROXY_SERVICE' \
              ./deploy/deploy.sh"
 
