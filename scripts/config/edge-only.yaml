@@ -1,0 +1,7 @@
+browsers:
+  - edge
+filename: edge-results
+repeat: 1
+categories:
+  - session
+  - main

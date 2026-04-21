@@ -60,6 +60,41 @@ const windowsDefaultBrowserSettings = {
     basedOn: 'chromium',
     update: ['DuckDuckGo', 'About DuckDuckGo'],
     updateNightly: ['DuckDuckGo', 'About DuckDuckGo']
+  },
+  chrome: {
+    command: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    name: 'Google Chrome',
+    nightlyName: 'Google Chrome Canary',
+    privateFlag: 'incognito',
+    basedOn: 'chromium'
+  },
+  edge: {
+    command: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    name: 'Microsoft Edge',
+    nightlyName: 'Microsoft Edge Canary',
+    privateFlag: 'inprivate',
+    basedOn: 'chromium'
+  },
+  firefox: {
+    command: 'C:/Program Files/Mozilla Firefox/firefox.exe',
+    name: 'firefox',
+    nightlyName: 'Firefox Nightly',
+    privateFlag: 'private-window',
+    basedOn: 'firefox'
+  },
+  opera: {
+    command: process.env.LOCALAPPDATA ? process.env.LOCALAPPDATA + '/Programs/Opera/launcher.exe' : 'C:/Users/user/AppData/Local/Programs/Opera/launcher.exe',
+    name: 'Opera',
+    nightlyName: 'Opera Developer',
+    privateFlag: 'private',
+    basedOn: 'chromium'
+  },
+  vivaldi: {
+    command: process.env.LOCALAPPDATA ? process.env.LOCALAPPDATA + '/Vivaldi/Application/vivaldi.exe' : 'C:/Users/user/AppData/Local/Vivaldi/Application/vivaldi.exe',
+    name: 'Vivaldi',
+    nightlyName: 'Vivaldi Snapshot',
+    privateFlag: 'incognito',
+    basedOn: 'chromium'
   }
 }
 
@@ -104,7 +139,7 @@ class DesktopBrowser {
       flags.push(flag);
     }
     if (this._incognito) {
-      flags.push("--" + this._defaults.privacyFlags);
+      flags.push("--" + this._defaults.privateFlag);
     }
     if (this._tor) {
       flags.push("--" + this._defaults.torFlag);
@@ -182,6 +217,10 @@ class DesktopBrowser {
       globalProxyUsageEnabled = enabled;
       globalProxyPort = port;
     }
+  }
+
+  static async countActiveVpns () {
+    return 0; // Stubbed for Windows
   }
 }
 

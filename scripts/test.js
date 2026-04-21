@@ -123,14 +123,24 @@ const nextMessage = async (websocket, timeout) => {
 
 const connect = async (address, protocols, options) => {
   const websocket = new WebSocket(address, protocols, options);
+  let firstMessageResolve;
+  websocket.firstMessagePromise = new Promise(resolve => { firstMessageResolve = resolve; });
+  websocket.once('message', (message) => {
+    firstMessageResolve(message);
+  });
   await eventPromise(websocket, 'open');
   return websocket;
 };
 
-// Set up websocket.
 const createWebsocket = async () => {
-  const websocket = await connect(`${RESULTS_ROOT.replace('https://', 'wss://')}/ws`);
-  const firstMessage = await nextMessage(websocket);
+  let wsUrl;
+  if (RESULTS_ROOT.startsWith('http://localhost:3335')) {
+    wsUrl = 'ws://localhost:3336/ws';
+  } else {
+    wsUrl = `${RESULTS_ROOT.replace('https://', 'wss://')}/ws`;
+  }
+  const websocket = await connect(wsUrl);
+  const firstMessage = await websocket.firstMessagePromise;
   log('message received', (new Date()).toISOString());
   log(firstMessage);
   const { sessionId } = JSON.parse(firstMessage);
@@ -471,13 +481,15 @@ const asyncMap = (parallel, asyncFunction, array) =>
 const prepareBrowserSession = async (config, hurry) => {
   const browser = createBrowserObject(config);
   const websocket = await createWebsocket();
+  let version;
   if (!hurry && browser instanceof DesktopBrowser) {
     await browser.launch();
     // Give browser the chance to load any feature flags.
     await sleepMs(60000);
+    version = await browser.version();
     await browser.kill();
   }
-  return { browser, websocket };
+  return { browser, websocket, version };
 };
 
 /*
@@ -539,7 +551,7 @@ const runTestsBatch = async (
             nightly,
             testResults,
             timeStarted,
-            reportedVersion: await browserSessions[i].browser.version(),
+            reportedVersion: browserSessions[i].version,
             os: os.type(),
             os_version: os.version()
           });
