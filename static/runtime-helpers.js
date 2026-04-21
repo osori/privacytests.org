@@ -34,10 +34,27 @@
   const startMeFlow = (sessionId) => {
     const encodedSessionId = encodeURIComponent(sessionId);
     const testPagesRoot2 = getTestPagesRoot2();
-    const readUrl = `${testPagesRoot2}/supercookies.html?mode=read&thirdparty=same&sessionId=${encodedSessionId}&me=true`;
-    const writeUrl = `${testPagesRoot2}/supercookies.html?mode=write&thirdparty=same&sessionId=${encodedSessionId}&me=true`;
-    window.open(readUrl, "_blank", "noopener");
-    window.location.href = writeUrl;
+    const testPagesRoot3 = runtimeConfig.TEST_PAGES_ROOT_3 || 'https://test-pages.privacytests3.org';
+    
+    // Supercookies tests
+    const supercookiesReadUrl = `${testPagesRoot2}/supercookies.html?mode=read&thirdparty=same&sessionId=${encodedSessionId}&me=true`;
+    const supercookiesWriteUrl = `${testPagesRoot2}/supercookies.html?mode=write&thirdparty=same&sessionId=${encodedSessionId}&me=true`;
+    
+    // Session storage tests (third-party)
+    const sessionWriteUrl = `${testPagesRoot3}/session.html?mode=write&sessionId=${encodedSessionId}&label=3p`;
+    const sessionReadUrl = `${testPagesRoot3}/session.html?mode=read&sessionId=${encodedSessionId}&label=3p`;
+    
+    // First-party session tests  
+    const sessionWrite1pUrl = `${testPagesRoot2}/session.html?mode=write&sessionId=${encodedSessionId}&firstParty=true&label=1p`;
+    const sessionRead1pUrl = `${testPagesRoot2}/session.html?mode=read&sessionId=${encodedSessionId}&firstParty=true&label=1p`;
+    
+    // Open read windows for all tests (these will wait for data to be written)
+    window.open(supercookiesReadUrl, "_blank", "noopener");
+    window.open(sessionReadUrl, "_blank", "noopener");
+    window.open(sessionRead1pUrl, "_blank", "noopener");
+    
+    // Start with session write (first-party), then write supercookies
+    window.location.href = supercookiesWriteUrl;
   };
 
   window.RUNTIME_HELPERS = Object.freeze({
